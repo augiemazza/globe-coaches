@@ -6,25 +6,49 @@
         body { margin: 0; }
         canvas { display: block; }
     </style>
-    <!-- Load all three files from your repository -->
-    <script src="three.min.js"></script>
-    <script src="three-globe.min.js"></script>
-    <script src="papaparse.min.js"></script>
 </head>
 <body>
+    <!-- Scripts will be dynamically added -->
+    <div id="container"></div>
+    
     <script>
-        window.addEventListener('load', () => {
+        // Function to load script and return a promise
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.onload = resolve;
+                script.onerror = reject;
+                script.src = url;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Load scripts in sequence
+        async function initialize() {
             try {
-                console.log('Starting initialization...');
+                console.log('Loading THREE.js...');
+                await loadScript('three.min.js');
+                console.log('THREE.js loaded');
+
+                console.log('Loading ThreeGlobe...');
+                await loadScript('three-globe.min.js');
+                console.log('ThreeGlobe loaded');
+
+                console.log('Loading PapaParse...');
+                await loadScript('papaparse.min.js');
+                console.log('PapaParse loaded');
+
+                // Now that everything is loaded, initialize the globe
+                console.log('Initializing globe...');
+                
                 // Create scene
                 const scene = new THREE.Scene();
                 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
                 const renderer = new THREE.WebGLRenderer();
                 
                 renderer.setSize(window.innerWidth, window.innerHeight);
-                document.body.appendChild(renderer.domElement);
+                document.getElementById('container').appendChild(renderer.domElement);
 
-                console.log('Creating globe...');
                 // Initialize globe
                 const Globe = new ThreeGlobe()
                     .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
@@ -76,10 +100,14 @@
                 }
 
                 fetchCoachData();
+                
             } catch (error) {
-                console.error('Error in initialization:', error);
+                console.error('Error during initialization:', error);
             }
-        });
+        }
+
+        // Start the initialization process
+        initialize();
     </script>
 </body>
 </html>
