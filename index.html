@@ -1,73 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Globe Test</title>
+    <title>Coach Finder Globe</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
     </style>
-    <!-- Load Three.js from CDN (this worked!) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.min.js"></script>
-    <!-- Load your local copy of Three-Globe -->
+    <!-- Load all three files from your repository -->
+    <script src="three.min.js"></script>
     <script src="three-globe.min.js"></script>
     <script src="papaparse.min.js"></script>
 </head>
 <body>
     <script>
-        // Create scene
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // Initialize globe
-        const Globe = new ThreeGlobe()
-            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-            .backgroundColor('#000011')
-            .pointColor(() => '#ff4433')
-            .pointAltitude(0.1)
-            .pointRadius(0.5);
-
-        scene.add(Globe);
-        scene.add(new THREE.AmbientLight(0xbbbbbb));
-        camera.position.z = 300;
-
-        // Animation
-        function animate() {
-            requestAnimationFrame(animate);
-            Globe.rotation.y += 0.001;
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // Fetch data
-        async function fetchCoachData() {
+        window.addEventListener('load', () => {
             try {
-                const response = await fetch('https://qv9phw0vv5.execute-api.eu-north-1.amazonaws.com/prod/coachfinder');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const text = await response.text();
+                console.log('Starting initialization...');
+                // Create scene
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer();
                 
-                Papa.parse(text, {
-                    header: true,
-                    complete: function(results) {
-                        const points = results.data
-                            .filter(row => row.latitude && row.longitude)
-                            .map(row => ({
-                                lat: parseFloat(row.latitude),
-                                lng: parseFloat(row.longitude),
-                                description: row.name
-                            }));
-                        Globe.pointsData(points);
-                    }
-                });
-            } catch (error) {
-                console.error('Error fetching coach data:', error);
-            }
-        }
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
 
-        fetchCoachData();
+                console.log('Creating globe...');
+                // Initialize globe
+                const Globe = new ThreeGlobe()
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
+                    .backgroundColor('#000011')
+                    .pointColor(() => '#ff4433')
+                    .pointAltitude(0.1)
+                    .pointRadius(0.5);
+
+                scene.add(Globe);
+                scene.add(new THREE.AmbientLight(0xbbbbbb));
+                camera.position.z = 300;
+
+                // Animation
+                function animate() {
+                    requestAnimationFrame(animate);
+                    Globe.rotation.y += 0.001;
+                    renderer.render(scene, camera);
+                }
+
+                console.log('Starting animation...');
+                animate();
+
+                // Fetch data
+                async function fetchCoachData() {
+                    try {
+                        console.log('Fetching coach data...');
+                        const response = await fetch('https://qv9phw0vv5.execute-api.eu-north-1.amazonaws.com/prod/coachfinder');
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        const text = await response.text();
+                        
+                        Papa.parse(text, {
+                            header: true,
+                            complete: function(results) {
+                                console.log('Parsing data...', results.data.length, 'entries found');
+                                const points = results.data
+                                    .filter(row => row.latitude && row.longitude)
+                                    .map(row => ({
+                                        lat: parseFloat(row.latitude),
+                                        lng: parseFloat(row.longitude),
+                                        description: row.name
+                                    }));
+                                Globe.pointsData(points);
+                                console.log('Points added:', points.length);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error fetching coach data:', error);
+                    }
+                }
+
+                fetchCoachData();
+            } catch (error) {
+                console.error('Error in initialization:', error);
+            }
+        });
     </script>
 </body>
 </html>
