@@ -4,22 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Three Globe Example</title>
-  <!-- Load Three.js -->
   <script src="three.min.js"></script>
-  <!-- Load ThreeGlobe -->
   <script src="three-globe.min.js"></script>
 </head>
 <body>
   <div id="three-container"></div>
   <script>
-    console.log('Loading THREE.js...');
-    console.log('THREE.js loaded');
-    
-    console.log('Loading ThreeGlobe...');
-    console.log('ThreeGlobe loaded');
-    
-    console.log('Initializing globe...');
-
     // Scene, Camera, Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -27,15 +17,19 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Set Scene Background Color
-    scene.background = new THREE.Color('#000000'); // Fix for background color
+    // Set Scene Background
+    scene.background = new THREE.Color('#000000');
 
     // Initialize Globe
     const globe = new ThreeGlobe()
-      .globeImageUrl('./path-to-earth-image.jpg') // Replace with correct image path
-      .bumpImageUrl('./path-to-bump-image.jpg'); // Optional bump map
-    globe.position.set(0, 0, 0); // Ensure proper initialization before setting position
-    scene.add(globe);
+      .globeImageUrl('./earth-image.jpg') // Correct paths for your images
+      .bumpImageUrl('./bump-image.jpg'); // Correct paths for your images
+
+    // Safely add globe to scene after initialization
+    setTimeout(() => {
+      globe.position.set(0, 0, 0); // Avoid "undefined" position error
+      scene.add(globe); // Add globe to scene
+    }, 100);
 
     // Camera Position
     camera.position.z = 250;
@@ -43,12 +37,10 @@
     // Animation Loop
     function animate() {
       requestAnimationFrame(animate);
-      globe.rotation.y += 0.005; // Slowly rotate the globe
+      globe.rotation.y += 0.005; // Slow rotation
       renderer.render(scene, camera);
     }
     animate();
-
-    console.log('Globe initialized.');
   </script>
 </body>
 </html>
