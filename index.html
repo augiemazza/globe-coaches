@@ -1,113 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Coach Finder Globe</title>
-    <style>
-        body { margin: 0; }
-        canvas { display: block; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Three Globe Example</title>
+  <!-- Load Three.js -->
+  <script src="three.min.js"></script>
+  <!-- Load Three-Globe -->
+  <script src="three-globe.min.js"></script>
+  <!-- Optional: Load any other required libraries -->
 </head>
 <body>
-    <!-- Scripts will be dynamically added -->
-    <div id="container"></div>
-    
-    <script>
-        // Function to load script and return a promise
-        function loadScript(url) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.onload = resolve;
-                script.onerror = reject;
-                script.src = url;
-                document.head.appendChild(script);
-            });
-        }
+  <!-- Container for Three.js -->
+  <div id="three-container"></div>
 
-        // Load scripts in sequence
-        async function initialize() {
-            try {
-                console.log('Loading THREE.js...');
-                await loadScript('three.min.js');
-                console.log('THREE.js loaded');
+  <script>
+    // Create Scene, Camera, Renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-                console.log('Loading ThreeGlobe...');
-                await loadScript('three-globe.min.js');
-                console.log('ThreeGlobe loaded');
+    // Initialize Globe
+    const globe = new ThreeGlobe()
+      .globeImageUrl('./path-to-your-earth-image.jpg') // Correct image path here
+      .bumpImageUrl('./path-to-your-bump-image.jpg'); // Optional bump map image
+    scene.add(globe);
 
-                console.log('Loading PapaParse...');
-                await loadScript('papaparse.min.js');
-                console.log('PapaParse loaded');
+    // Set Camera Position
+    camera.position.z = 250;
 
-                // Now that everything is loaded, initialize the globe
-                console.log('Initializing globe...');
-                
-                // Create scene
-                const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                const renderer = new THREE.WebGLRenderer();
-                
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                document.getElementById('container').appendChild(renderer.domElement);
-
-                // Initialize globe
-                const Globe = new ThreeGlobe()
-                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-                    .backgroundColor('#000011')
-                    .pointColor(() => '#ff4433')
-                    .pointAltitude(0.1)
-                    .pointRadius(0.5);
-
-                scene.add(Globe);
-                scene.add(new THREE.AmbientLight(0xbbbbbb));
-                camera.position.z = 300;
-
-                // Animation
-                function animate() {
-                    requestAnimationFrame(animate);
-                    Globe.rotation.y += 0.001;
-                    renderer.render(scene, camera);
-                }
-
-                console.log('Starting animation...');
-                animate();
-
-                // Fetch data
-                async function fetchCoachData() {
-                    try {
-                        console.log('Fetching coach data...');
-                        const response = await fetch('https://qv9phw0vv5.execute-api.eu-north-1.amazonaws.com/prod/coachfinder');
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        const text = await response.text();
-                        
-                        Papa.parse(text, {
-                            header: true,
-                            complete: function(results) {
-                                console.log('Parsing data...', results.data.length, 'entries found');
-                                const points = results.data
-                                    .filter(row => row.latitude && row.longitude)
-                                    .map(row => ({
-                                        lat: parseFloat(row.latitude),
-                                        lng: parseFloat(row.longitude),
-                                        description: row.name
-                                    }));
-                                Globe.pointsData(points);
-                                console.log('Points added:', points.length);
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Error fetching coach data:', error);
-                    }
-                }
-
-                fetchCoachData();
-                
-            } catch (error) {
-                console.error('Error during initialization:', error);
-            }
-        }
-
-        // Start the initialization process
-        initialize();
-    </script>
+    // Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      globe.rotation.y += 0.005; // Slow rotation for the globe
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
 </body>
 </html>
